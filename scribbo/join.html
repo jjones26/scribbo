@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join a Scribbo session</title>
+  <meta name="description" content="Enter your session code to join your teacher's whiteboard." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body class="paper">
+  <header class="site-header">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">✎</span>
+      <span class="logo-word">Scribbo</span>
+    </a>
+  </header>
+
+  <main class="join-main">
+    <div class="join-card">
+      <div class="join-stamp">student</div>
+      <h1 class="join-title">Hop in.</h1>
+      <p class="join-sub">Enter the code your teacher gave you.</p>
+
+      <form id="join-form" class="join-form" onsubmit="return false;">
+        <label class="field">
+          <span class="field-label">Session code</span>
+          <input
+            id="input-code"
+            type="text"
+            class="input input-code"
+            placeholder="ABC123"
+            maxlength="6"
+            autocapitalize="characters"
+            autocomplete="off"
+            spellcheck="false"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Your name</span>
+          <input
+            id="input-name"
+            type="text"
+            class="input"
+            placeholder="e.g. Alex M."
+            maxlength="20"
+            autocomplete="off"
+            required
+          />
+        </label>
+
+        <p id="join-error" class="join-error" hidden></p>
+
+        <button id="join-btn" type="submit" class="btn btn-primary btn-block">
+          Join the board
+          <span class="btn-arrow">→</span>
+        </button>
+      </form>
+
+      <p class="join-foot">
+        Are you a teacher? <a href="index.html">Start a session instead.</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="session.js"></script>
+  <script>
+    (async () => {
+      try { await Scribbo.init(); } catch (e) {}
+
+      const form    = document.getElementById('join-form');
+      const codeIn  = document.getElementById('input-code');
+      const nameIn  = document.getElementById('input-name');
+      const errEl   = document.getElementById('join-error');
+      const btn     = document.getElementById('join-btn');
+
+      // Force uppercase as the user types
+      codeIn.addEventListener('input', () => {
+        const start = codeIn.selectionStart;
+        codeIn.value = codeIn.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        codeIn.setSelectionRange(start, start);
+      });
+
+      // Pre-fill code from ?code= in URL if present
+      const params = new URLSearchParams(window.location.search);
+      const prefill = params.get('code');
+      if (prefill) {
+        codeIn.value = prefill.toUpperCase();
+        nameIn.focus();   // jump to name field if code already provided
+      } else {
+        codeIn.focus();   // otherwise focus the code field
+      }
+
+      function showError(msg) {
+        errEl.textContent = msg;
+        errEl.hidden = false;
+      }
+      function clearError() {
+        errEl.hidden = true;
+        errEl.textContent = '';
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError();
+        const code = codeIn.value.trim().toUpperCase();
+        const name = nameIn.value.trim();
+
+        btn.disabled = true;
+        const original = btn.innerHTML;
+        btn.innerHTML = 'Joining…';
+        try {
+          const result = await Scribbo.joinSession(code, name);
+          window.location.href =
+            `board.html?role=student&code=${result.code}&name=${encodeURIComponent(name)}`;
+        } catch (err) {
+          showError(err.message || 'Could not join. Check the code and try again.');
+          btn.disabled = false;
+          btn.innerHTML = original;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

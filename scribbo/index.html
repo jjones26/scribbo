@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scribbo — the classroom whiteboard</title>
+  <meta name="description" content="A live whiteboard for teachers and students. Create a board in 10 seconds, join with a code, draw together. No accounts, no downloads." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <meta property="og:title" content="Scribbo — the classroom whiteboard" />
+  <meta property="og:description" content="Create a board in 10 seconds. Students join with a code. Everyone draws together." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body class="paper">
+  <header class="site-header">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">✎</span>
+      <span class="logo-word">Scribbo</span>
+    </a>
+    <nav class="site-nav">
+      <a href="join.html" class="nav-link">Join a session</a>
+    </nav>
+  </header>
+
+  <main class="landing">
+    <section class="hero">
+      <div class="hero-stamp">for teachers</div>
+      <h1 class="hero-title">
+        The whiteboard<br />
+        your <span class="scribble-underline">classroom</span><br />
+        actually uses.
+      </h1>
+      <p class="hero-sub">
+        Create a board in 10 seconds. Students join with a code.
+        Everyone draws together — no accounts, no downloads, no nonsense.
+      </p>
+
+      <div class="cta-row">
+        <button id="cta-create" class="btn btn-primary">
+          Start a session
+          <span class="btn-arrow">→</span>
+        </button>
+        <a href="join.html" class="btn btn-ghost">I have a code</a>
+      </div>
+
+      <div class="hero-meta">
+        <span>✦ free for teachers</span>
+        <span>✦ no sign-up</span>
+        <span>✦ works on any device</span>
+      </div>
+    </section>
+
+    <section class="how">
+      <h2 class="section-title">How it works</h2>
+      <ol class="how-steps">
+        <li class="step">
+          <div class="step-num">01</div>
+          <h3>Create a session</h3>
+          <p>One click. You get a 6-character code to share with your class.</p>
+        </li>
+        <li class="step">
+          <div class="step-num">02</div>
+          <h3>Students join with the code</h3>
+          <p>They type their name, get assigned a color, and they're in.</p>
+        </li>
+        <li class="step">
+          <div class="step-num">03</div>
+          <h3>Draw together, live</h3>
+          <p>Everyone's strokes appear instantly. Save the board as an image when you're done.</p>
+        </li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Made for teachers. Scribbo is a small tool, not a platform.</p>
+  </footer>
+
+  <!-- Firebase SDK (compat build for simpler global API) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="session.js"></script>
+  <script>
+    (async () => {
+      try { await Scribbo.init(); } catch (e) { /* keep going in local mode */ }
+
+      // Background: sweep sessions older than 24h (best effort, ignores errors)
+      if (Scribbo.isReady() && Scribbo._internal.db) {
+        const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+        try {
+          const snap = await Scribbo._internal.db.ref('sessions')
+            .orderByChild('meta/createdAt')
+            .endAt(dayAgo)
+            .limitToFirst(10)
+            .once('value');
+          snap.forEach(child => {
+            child.ref.remove().catch(() => {});
+          });
+        } catch (e) { /* probably permissions or index — ignore */ }
+      }
+
+      const btn = document.getElementById('cta-create');
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const original = btn.innerHTML;
+        btn.innerHTML = 'Creating session…';
+        try {
+          const { code } = await Scribbo.createSession();
+          window.location.href = `board.html?role=teacher&code=${code}`;
+        } catch (err) {
+          alert(err.message || 'Could not create a session. Try again.');
+          btn.disabled = false;
+          btn.innerHTML = original;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

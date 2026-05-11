@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5efe2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Scribbo — Board</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body class="board-body">
+  <div class="board-shell">
+    <!-- TOP BAR -->
+    <header class="board-bar board-bar-top">
+      <div class="bar-left">
+        <a href="index.html" class="logo logo-sm">
+          <span class="logo-mark">✎</span>
+          <span class="logo-word">Scribbo</span>
+        </a>
+        <span id="connection-status" class="conn-status conn-status-ok" title="Connected">
+          <span class="conn-dot"></span>
+          <span class="conn-label">live</span>
+        </span>
+      </div>
+
+      <div class="bar-center">
+        <div class="code-display" title="Click to copy">
+          <span class="code-label">code</span>
+          <span id="session-code" class="code-value">------</span>
+          <span class="code-copy">⎘</span>
+        </div>
+      </div>
+
+      <div class="bar-right">
+        <button class="icon-btn" title="Participants">
+          <span class="icon-btn-icon">👥</span>
+          <span id="participant-count" class="icon-btn-count">1</span>
+        </button>
+        <button id="fullscreen-btn" class="icon-btn" title="Fullscreen">
+          <span class="icon-btn-icon icon-fullscreen-enter">⤢</span>
+          <span class="icon-btn-icon icon-fullscreen-exit" hidden>⤡</span>
+        </button>
+        <button class="icon-btn" title="Save as image">
+          <span class="icon-btn-icon">⬇</span>
+        </button>
+        <button class="btn btn-end" title="End session">End</button>
+      </div>
+    </header>
+
+    <!-- CANVAS -->
+    <div class="canvas-stage">
+      <canvas id="board-canvas" class="board-canvas"></canvas>
+
+      <!-- placeholder hint, removed once strokes exist -->
+      <div class="canvas-hint">
+        <span class="hint-arrow">↓</span>
+        <p>Pick the pen and start drawing.<br />Your students will see it instantly.</p>
+      </div>
+
+      <!-- floating name labels for in-progress remote strokes (populated by JS) -->
+      <div id="live-labels" class="live-labels" aria-hidden="true"></div>
+    </div>
+
+    <!-- BOTTOM TOOLBAR -->
+    <footer class="board-bar board-bar-bottom">
+      <div class="toolbar">
+        <button class="tool-btn tool-btn-active" title="Pen">
+          <span class="tool-icon">✎</span>
+          <span class="tool-label">Pen</span>
+        </button>
+        <button class="tool-btn" title="Clear board">
+          <span class="tool-icon">⌫</span>
+          <span class="tool-label">Clear</span>
+        </button>
+      </div>
+
+      <!-- Pen width selector -->
+      <div class="toolbar toolbar-widths" role="radiogroup" aria-label="Pen width">
+        <button class="width-btn"               data-width="2" title="Thin">
+          <span class="width-preview" style="--w:2px"></span>
+        </button>
+        <button class="width-btn width-btn-active" data-width="4" title="Medium">
+          <span class="width-preview" style="--w:5px"></span>
+        </button>
+        <button class="width-btn"               data-width="8" title="Thick">
+          <span class="width-preview" style="--w:9px"></span>
+        </button>
+      </div>
+
+      <div class="toolbar toolbar-colors">
+        <button class="swatch swatch-active" style="--swatch:#1a1a1a" aria-label="Black"></button>
+        <button class="swatch" style="--swatch:#e63946" aria-label="Red"></button>
+        <button class="swatch" style="--swatch:#1d7874" aria-label="Teal"></button>
+        <button class="swatch" style="--swatch:#f4a261" aria-label="Orange"></button>
+        <button class="swatch" style="--swatch:#264653" aria-label="Navy"></button>
+      </div>
+    </footer>
+
+    <!-- PARTICIPANTS PANEL -->
+    <aside class="participants" hidden>
+      <h3 class="participants-title">In this session</h3>
+      <ul id="participant-list" class="participant-list">
+        <!-- populated by board.js -->
+      </ul>
+    </aside>
+
+    <!-- SESSION ENDED OVERLAY -->
+    <div id="ended-overlay" class="ended-overlay" hidden>
+      <div class="ended-card">
+        <div class="ended-stamp">session ended</div>
+        <h2 class="ended-title">That's a wrap.</h2>
+        <p class="ended-sub">Your teacher closed the board.</p>
+        <a href="index.html" class="btn btn-primary">Back to Scribbo</a>
+      </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-spinner" aria-hidden="true">
+        <span class="loading-mark">✎</span>
+      </div>
+      <p class="loading-text">Connecting to the board…</p>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="session.js"></script>
+  <script src="board.js"></script>
+</body>
+</html>
